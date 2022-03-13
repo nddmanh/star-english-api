@@ -1,0 +1,36 @@
+{
+  "name": "server-android-app",
+  "version": "1.0.0",
+  "description": "",
+  "main": "index.js",
+  "scripts": {
+    "start": "nodemon --exec babel-node src/server.js",
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "eslint": "eslint src",
+    "clean": "rm -rf build && mkdir build",
+    "build-babel": "babel ./src -d ./build/src",
+    "build": "npm run clean && npm run build-babel",
+    "production": "npm run build && node ./build/src/server.js",
+    "dev": "nodemon --exec ./node_modules/.bin/babel-node ./src/server.js"
+  },
+  "author": "",
+  "license": "ISC",
+  "dependencies": {
+    "cors": "^2.8.5",
+    "dotenv": "^16.0.0",
+    "express": "^4.17.3",
+    "jsonwebtoken": "^8.5.1",
+    "mongoose": "^6.2.6"
+  },
+  "devDependencies": {
+    "@babel/cli": "^7.17.6",
+    "@babel/core": "^7.17.5",
+    "@babel/eslint-parser": "^7.17.0",
+    "@babel/node": "^7.16.8",
+    "@babel/plugin-transform-runtime": "^7.17.0",
+    "@babel/preset-env": "^7.16.11",
+    "babel-plugin-module-resolver": "^4.1.0",
+    "eslint": "^8.11.0",
+    "nodemon": "^2.0.15"
+  }
+}
