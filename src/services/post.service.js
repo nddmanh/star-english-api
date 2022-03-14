@@ -13,7 +13,6 @@ const getAllPosts = async (infoPage) => {
       .skip(skip_posts)
       .limit(pageOptions.limit);
 
-    // winston.info(`Get #${pageOptions.limit} posts in page: #${pageOptions.page}`);
     winston.debug(`Get #${pageOptions.limit} posts in page: #${pageOptions.page}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,

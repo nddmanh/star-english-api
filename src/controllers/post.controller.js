@@ -10,7 +10,7 @@ const getAllPosts = async (req, res) => {
     winston.error(error);
     res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
       .json({
-        success: false,
+        statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
         message: 'Internal server error'
       });
   }
@@ -24,7 +24,7 @@ const createOnePost = async (req, res) => {
     winston.error(error);
     res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
       .json({
-        success: false,
+        statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
         message: 'Internal server error'
       });
   }
