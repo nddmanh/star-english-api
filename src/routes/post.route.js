@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 // const verifyToken = require('../middleware/auth');
 
-const { getAllPosts } = require('../controllers/post.controller');
+const { getAllPosts, createOnePost } = require('../controllers/post.controller');
 
 // router.get('/', verifyToken, getAllPosts);
 
@@ -14,4 +14,6 @@ const { getAllPosts } = require('../controllers/post.controller');
 
 router.get('/', getAllPosts);
 
-module.exports = router
+router.post('/', createOnePost);
+
+module.exports = router;

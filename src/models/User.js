@@ -1,33 +1,33 @@
-import mongoose from mongoose;
+import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
   username: {
-      type: String, 
-      unique: true, 
-      required: [true, 'username must be required.']
+    type: String,
+    unique: true,
+    required: [true, 'username must be required.']
   },
   password: {
-      type: String, 
-      required: [true, 'Password must be required.'],
-      minlength: [6, 'Password must be at least 6 charecters']
+    type: String,
+    required: [true, 'Password must be required.'],
+    minlength: [6, 'Password must be at least 6 charecters']
   },
   fullname: {
-    type: String, 
+    type: String,
     required: [true, 'fullname must be required.']
   },
   score: {
-    type: Number, 
+    type: Number,
     default: 0
   },
   age: {
-    type: Number, 
+    type: Number,
     required: [true, 'age must be required.']
   },
   school: {
-    type: String, 
+    type: String,
     required: [true, 'fullname must be required.']
-  },
-}, {timestamps: true});
+  }
+}, { timestamps: true });
 
 const User = mongoose.model('User', userSchema);
 
