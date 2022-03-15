@@ -1,16 +1,7 @@
-const express = require('express');
+import express from 'express';
+import { getAllPosts, createOnePost } from '../controllers/post.controller';
+
 const router = express.Router();
-// const verifyToken = require('../middleware/auth');
-
-const { getAllPosts, createOnePost } = require('../controllers/post.controller');
-
-// router.get('/', verifyToken, getAllPosts);
-
-// router.post('/', verifyToken, createOnePost);
-
-// router.put('/:id', verifyToken, updateOnePost);
-
-// router.delete('/:id', verifyToken, deleteOnePost);
 
 router.get('/', getAllPosts);
 

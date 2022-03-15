@@ -30,7 +30,7 @@ const userSchema = new mongoose.Schema({
   },
   school: {
     type: String,
-    required: [true, 'fullname must be required.']
+    required: [true, 'school must be required.']
   }
 }, { timestamps: true });
 
