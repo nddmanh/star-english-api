@@ -6,12 +6,13 @@ const getAllPosts = async (infoPage) => {
   try {
     const pageOptions = {
       page: parseInt(infoPage.page, 10) || 1,
-      limit: parseInt(infoPage.limit, 10) || 1
+      limit: parseInt(infoPage.limit, 10) || 10
     };
     const skip_posts = (pageOptions.page - 1) * pageOptions.limit;
-    const posts = await Post.find()
+    let posts = await Post.find()
       .skip(skip_posts)
-      .limit(pageOptions.limit);
+      .limit(pageOptions.limit)
+      .select('id title description content createdAt');
 
     winston.debug(`Get #${pageOptions.limit} posts in page: #${pageOptions.page}`);
     return {
@@ -56,7 +57,26 @@ const createOnePost = async (post) => {
   }
 };
 
+const findOnePost = async (id) => {
+  try {
+    const post = await Post.findById(id).select('id title description content createdAt');
+    winston.debug(`Get posts with id: #${id}`);
+    return {
+      statusCode: STATUS_CODE.SUCCESS,
+      message: 'Get one post successfully',
+      data: post
+    };
+  } catch (error) {
+    winston.error(error);
+    return {
+      statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
+      message: 'Internal server error'
+    };
+  }
+};
+
 module.exports = {
   getAllPosts,
-  createOnePost
+  createOnePost,
+  findOnePost
 };

@@ -113,7 +113,8 @@ const login = async (user) => {
 
 const getCurrentUser = async (userId) => {
   try {
-    const user = await User.findById(userId).select('-password');
+    const user = await User.findById(userId)
+      .select('id username fullname age school score role');
     if (!user) {
       winston.error('User not found.');
       return {
@@ -121,13 +122,11 @@ const getCurrentUser = async (userId) => {
         message: 'User not found.'
       };
     }
-    winston.debug(`Get user successfully with id: #${userId}`);
+    winston.debug(`Get current user successfully with id: #${userId}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
-      message: 'Get user successfully.',
-      data: {
-        user
-      }
+      message: 'Get current user successfully.',
+      data: user
     };
   } catch (error) {
     winston.error(error);
