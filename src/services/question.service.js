@@ -3,23 +3,38 @@ import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
 
 const getQuestions = async (infoPage) => {
+  if (!infoPage.level) {
+    winston.error('You need level for question in query.');
+    return {
+      statusCode: STATUS_CODE.BAD_REQUEST,
+      message: 'You need level for question in query.'
+    };
+  }
   try {
     const pageOptions = {
       page: parseInt(infoPage.page, 10) || 1,
       limit: parseInt(infoPage.limit, 10) || 1
     };
+    const levelQuestion = infoPage.level.toLowerCase();
     const skip_questions = (pageOptions.page - 1) * pageOptions.limit;
-    const questions = await Question.find()
+    let questions = await Question.find({ 'level': levelQuestion })
       .skip(skip_questions)
-      .limit(pageOptions.limit);
+      .limit(pageOptions.limit)
+      .lean()
+      .select('question_content level answer1 answer2 answer3 answer4 correct_answer');
 
-    winston.debug(`Get #${pageOptions.limit} questions in page: #${pageOptions.page}`);
+    for (let i = 0; i < questions.length; i++) {
+      questions[i]['number'] = i + 1;
+    }
+
+    winston.debug(`Get #${pageOptions.limit} questions level ${levelQuestion} in page: #${pageOptions.page}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get all question successfully',
       data: {
         page: pageOptions.page,
         limit: pageOptions.limit,
+        count: questions.length,
         questions
       }
     };
