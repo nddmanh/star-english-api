@@ -13,21 +13,33 @@ const getQuestions = async (infoPage) => {
   try {
     const pageOptions = {
       page: parseInt(infoPage.page, 10) || 1,
-      limit: parseInt(infoPage.limit, 10) || 1
+      limit: parseInt(infoPage.limit, 10) || 10
     };
     const levelQuestion = infoPage.level.toLowerCase();
-    const skip_questions = (pageOptions.page - 1) * pageOptions.limit;
-    let questions = await Question.find({ 'level': levelQuestion })
-      .skip(skip_questions)
-      .limit(pageOptions.limit)
-      .lean()
-      .select('question_content level answer1 answer2 answer3 answer4 correct_answer');
-
+    let question_size;
+    let questions = [];
+    let arr_randoms = [];
+    let num_question = await Question.count({ 'level': levelQuestion });
+    winston.debug(`Count the num question with level #${levelQuestion}: ${num_question}`);
+    if (num_question > pageOptions.limit) {
+      question_size = pageOptions.limit;
+    } else {
+      question_size = num_question;
+    }
+    while (arr_randoms.length < question_size) {
+      let random = Math.floor(Math.random() * num_question);
+      if (arr_randoms.indexOf(random) === -1) arr_randoms.push(random);
+    }
+    for (const random of arr_randoms) {
+      let question = await Question.findOne().skip(random)
+        .lean()
+        .select('question_content level answer1 answer2 answer3 answer4 correct_answer');
+      questions.push(question);
+    }
     for (let i = 0; i < questions.length; i++) {
       questions[i]['number'] = i + 1;
     }
-
-    winston.debug(`Get #${pageOptions.limit} questions level ${levelQuestion} in page: #${pageOptions.page}`);
+    winston.debug(`Get #${question_size} questions level ${levelQuestion} in page: #${pageOptions.page}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get all question successfully',
