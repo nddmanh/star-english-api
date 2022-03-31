@@ -40,12 +40,16 @@ const register = async (user) => {
     winston.debug(`Create a new user successfully with email: ${userRec.email}`);
 
     const username = email.split('@')[0];
-    sendMail(userRec.email, transMail.subject(userRec.email), transMail.template(username, userRec.emailToken))
-      .then( async (success) => {
-        // await User.deleteOne(userRec);
+    await sendMail(userRec.email, transMail.subject(userRec.email), transMail.template(username, userRec.emailToken))
+      .then((success) => {
+        winston.debug(`Send verify email to: ${email}`);
       }).catch( async (err) => {
-        // await User.remove(userRec);
+        await User.deleteOne(userRec);
         winston.error(err);
+        return {
+          statusCode: STATUS_CODE.BAD_REQUEST,
+          message: 'User created failed'
+        };
       });
 
     return {
@@ -87,6 +91,16 @@ const login = async (user) => {
         message: 'Incorrect email or password'
       };
     }
+    if (!user.isVerified) {
+      winston.error('User need verify email!');
+      return {
+        statusCode: STATUS_CODE.SUCCESS,
+        message: 'User need verify email!',
+        data: {
+          accessToken: ''
+        }
+      };
+    }
     winston.debug(`Login successfully with username: ${user.username}`);
     const accessToken = jwt.sign(
       {
@@ -117,7 +131,7 @@ const login = async (user) => {
 const getCurrentUser = async (userId) => {
   try {
     const user = await User.findById(userId)
-      .select('id username fullname age school score role');
+      .select('id email fullname age school score role');
     if (!user) {
       winston.error('User not found.');
       return {
@@ -140,8 +154,30 @@ const getCurrentUser = async (userId) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  try {
+    let emailToken = req.query.token;
+    const userRec = await User.findOne({ emailToken });
+    if (userRec) {
+      userRec.emailToken = null;
+      userRec.isVerified = true;
+      await userRec.save();
+      res.render('verify_success');
+    } else {
+      res.render('404');
+    }
+  } catch (error) {
+    winston.error(error);
+    return {
+      statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
+      message: 'Internal server error'
+    };
+  }
+};
+
 module.exports = {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  verifyEmail
 };

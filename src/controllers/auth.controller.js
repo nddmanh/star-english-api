@@ -44,8 +44,22 @@ const getCurrentUser = async (req, res) => {
   }
 };
 
+const verifyEmail = async (req, res) => {
+  try {
+    return await AuthService.verifyEmail(req, res);
+  } catch (error) {
+    winston.error(error);
+    res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
+      .json({
+        statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
+        message: 'Internal server error'
+      });
+  }
+};
+
 module.exports = {
   register,
   login,
-  getCurrentUser
+  getCurrentUser,
+  verifyEmail
 };

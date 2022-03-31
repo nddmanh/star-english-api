@@ -16,6 +16,9 @@ connectDB();
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
 
+app.set('view engine', 'ejs');
+app.set('views', './src/views');
+
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/users', userRouter);
 app.use('/api/v1/posts', postRouter);
