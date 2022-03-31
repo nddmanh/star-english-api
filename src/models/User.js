@@ -1,10 +1,10 @@
 import mongoose from 'mongoose';
 
 const userSchema = new mongoose.Schema({
-  username: {
+  email: {
     type: String,
     unique: true,
-    required: [true, 'username must be required.']
+    required: [true, 'email must be required.']
   },
   password: {
     type: String,
@@ -31,6 +31,12 @@ const userSchema = new mongoose.Schema({
   school: {
     type: String,
     required: [true, 'school must be required.']
+  },
+  emailToken: {
+    type: String
+  },
+  isVerified: {
+    type: Boolean
   }
 }, { timestamps: true });
 

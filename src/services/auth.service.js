@@ -1,12 +1,16 @@
+require('dotenv').config();
 import User from './../models/User';
 import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
 import argon2 from 'argon2';
 import jwt from 'jsonwebtoken';
+import crypto from 'crypto';
+import { sendMail } from '../configs/mail';
+import { transMail } from '../lang/vi';
 
 const register = async (user) => {
-  const { username, password, fullname, age, school } = user;
-  if (!username || !password || !fullname || !age || !school) {
+  const { email, password, fullname, age, school } = user;
+  if (!email || !password || !fullname || !age || !school) {
     winston.error('Missing at least one field when registering.');
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
@@ -14,7 +18,7 @@ const register = async (user) => {
     };
   }
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (user) {
       winston.error('Username already taken.');
       return {
@@ -24,30 +28,29 @@ const register = async (user) => {
     }
     const hashedPassword = await argon2.hash(password);
     const newUser = new User({
-      username,
+      email,
       password: hashedPassword,
       fullname,
       age,
-      school
+      school,
+      emailToken: crypto.randomBytes(64).toString('hex'),
+      isVerified: false
     });
     const userRec = await newUser.save();
-    winston.debug(`Create a new user successfully with username: ${userRec.username}`);
-    const accessToken = jwt.sign(
-      {
-        userId: userRec._id,
-        fullname: userRec.fullname,
-        username: userRec.username,
-        role: userRec.role
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: process.env.ACCESS_TOKEN_TTL || '3d' }
-    );
+    winston.debug(`Create a new user successfully with email: ${userRec.email}`);
+
+    const username = email.split('@')[0];
+    sendMail(userRec.email, transMail.subject(userRec.email), transMail.template(username, userRec.emailToken))
+      .then( async (success) => {
+        // await User.deleteOne(userRec);
+      }).catch( async (err) => {
+        // await User.remove(userRec);
+        winston.error(err);
+      });
+
     return {
       statusCode: STATUS_CODE.SUCCESS,
-      message: 'User created successfully',
-      data: {
-        accessToken
-      }
+      message: 'User created successfully'
     };
   } catch (error) {
     winston.error(error);
@@ -59,8 +62,8 @@ const register = async (user) => {
 };
 
 const login = async (user) => {
-  const { username, password } = user;
-  if (!username || !password ) {
+  const { email, password } = user;
+  if (!email || !password ) {
     winston.error('Missing at least one field when login.');
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
@@ -68,20 +71,20 @@ const login = async (user) => {
     };
   }
   try {
-    const user = await User.findOne({ username });
+    const user = await User.findOne({ email });
     if (!user) {
-      winston.error('Incorrect username or password');
+      winston.error('Incorrect email or password');
       return {
         statusCode: STATUS_CODE.BAD_REQUEST,
-        message: 'Incorrect username or password'
+        message: 'Incorrect email or password'
       };
     }
     const passwordValid = await argon2.verify(user.password, password);
     if (!passwordValid) {
-      winston.error('Incorrect username or password');
+      winston.error('Incorrect email or password');
       return {
         statusCode: STATUS_CODE.BAD_REQUEST,
-        message: 'Incorrect username or password'
+        message: 'Incorrect email or password'
       };
     }
     winston.debug(`Login successfully with username: ${user.username}`);
@@ -89,7 +92,7 @@ const login = async (user) => {
       {
         userId: user._id,
         fullname: user.fullname,
-        username: user.username,
+        email: user.email,
         role: user.role
       },
       process.env.ACCESS_TOKEN_SECRET,
