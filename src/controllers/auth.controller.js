@@ -57,9 +57,24 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const loginGoogle = async (req, res) => {
+  try {
+    const result = await AuthService.loginGoogle(req.body);
+    return res.status(result.statusCode).json(result);
+  } catch (error) {
+    winston.error(error);
+    res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
+      .json({
+        statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
+        message: 'Internal server error'
+      });
+  }
+};
+
 module.exports = {
   register,
   login,
   getCurrentUser,
-  verifyEmail
+  verifyEmail,
+  loginGoogle
 };

@@ -2,11 +2,12 @@ require('dotenv').config();
 import User from './../models/User';
 import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
+import { generateJwtToken } from './../helper/auth';
 import argon2 from 'argon2';
-import jwt from 'jsonwebtoken';
 import crypto from 'crypto';
 import { sendMail } from '../configs/mail';
 import { transMail } from '../lang/vi';
+import { OAuth2Client } from 'google-auth-library';
 
 const register = async (user) => {
   const { email, password, fullname, age, school } = user;
@@ -101,17 +102,8 @@ const login = async (user) => {
         }
       };
     }
-    winston.debug(`Login successfully with username: ${user.username}`);
-    const accessToken = jwt.sign(
-      {
-        userId: user._id,
-        fullname: user.fullname,
-        email: user.email,
-        role: user.role
-      },
-      process.env.ACCESS_TOKEN_SECRET,
-      { expiresIn: process.env.ACCESS_TOKEN_TTL || '3d' }
-    );
+    winston.debug(`Login successfully with username: ${user.email}`);
+    const accessToken = generateJwtToken(user);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'User login successfully',
@@ -175,9 +167,72 @@ const verifyEmail = async (req, res) => {
   }
 };
 
+const loginGoogle = async (token) => {
+  const { googleToken } = token;
+  if (!googleToken ) {
+    winston.error('Missing googleToken.');
+    return {
+      statusCode: STATUS_CODE.BAD_REQUEST,
+      message: 'Missing googleToken.'
+    };
+  }
+  let ggClientId = process.env.GG_CLIENT_ID;
+  let ggSecret = process.env.GG_CLIENT_SECRET;
+  try {
+    const oAuth2Client = new OAuth2Client(ggClientId, ggSecret);
+    let ggLoginTicket = await oAuth2Client.verifyIdToken({
+      idToken: googleToken,
+      audience: ggClientId
+    });
+    const {
+      email_verified,
+      email,
+      name
+    } = ggLoginTicket.getPayload();
+    if (!email_verified) {
+      return {
+        statusCode: STATUS_CODE.FORBIDDEN,
+        message: `Email ${email} is not verified`
+      };
+    }
+    let accessToken;
+    const foundExistingUser = await User.findOne({ email });
+    if (!foundExistingUser) {
+      const newUser = new User({
+        email,
+        password: null,
+        fullname: name,
+        age: null,
+        school: null,
+        emailToken: null,
+        isVerified: true
+      });
+      const userRec = await newUser.save();
+      winston.debug(`[SIGN IN WITH GOOGLE] Create a new user successfully with email: ${userRec.email}`);
+      accessToken = generateJwtToken(userRec);
+    } else {
+      accessToken = generateJwtToken(foundExistingUser);
+    }
+    return {
+      statusCode: STATUS_CODE.SUCCESS,
+      message: 'User login google successfully',
+      data: {
+        accessToken
+      }
+    };
+  } catch (error) {
+    winston.error(error);
+    return {
+      statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
+      message: 'Internal server error'
+    };
+  }
+};
+
 module.exports = {
   register,
   login,
   getCurrentUser,
-  verifyEmail
+  verifyEmail,
+  loginGoogle
 };
