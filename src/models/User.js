@@ -20,17 +20,14 @@ const userSchema = new mongoose.Schema({
     enum: ['user', 'admin'],
     default: 'user'
   },
+  typeLogin: {
+    type: String,
+    enum: ['local', 'google'],
+    required: [true]
+  },
   score: {
     type: Number,
     default: 0
-  },
-  age: {
-    type: Number,
-    required: [true, 'age must be required.']
-  },
-  school: {
-    type: String,
-    required: [true, 'school must be required.']
   },
   emailToken: {
     type: String

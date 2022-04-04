@@ -8,10 +8,11 @@ import crypto from 'crypto';
 import { sendMail } from '../configs/mail';
 import { transMail } from '../lang/vi';
 import { OAuth2Client } from 'google-auth-library';
+import { TYPE_LOGIN_LOCAL, TYPE_LOGIN_GOOGLE } from '../constants/auth';
 
 const register = async (user) => {
-  const { email, password, fullname, age, school } = user;
-  if (!email || !password || !fullname || !age || !school) {
+  const { email, password, fullname } = user;
+  if (!email || !password || !fullname ) {
     winston.error('Missing at least one field when registering.');
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
@@ -19,7 +20,10 @@ const register = async (user) => {
     };
   }
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email,
+      typeLogin: TYPE_LOGIN_LOCAL
+    });
     if (user) {
       winston.error('Username already taken.');
       return {
@@ -32,8 +36,7 @@ const register = async (user) => {
       email,
       password: hashedPassword,
       fullname,
-      age,
-      school,
+      typeLogin: TYPE_LOGIN_LOCAL,
       emailToken: crypto.randomBytes(64).toString('hex'),
       isVerified: false
     });
@@ -76,7 +79,10 @@ const login = async (user) => {
     };
   }
   try {
-    const user = await User.findOne({ email });
+    const user = await User.findOne({
+      email,
+      typeLogin: TYPE_LOGIN_LOCAL
+    });
     if (!user) {
       winston.error('Incorrect email or password');
       return {
@@ -123,7 +129,7 @@ const login = async (user) => {
 const getCurrentUser = async (userId) => {
   try {
     const user = await User.findById(userId)
-      .select('id email fullname age school score role');
+      .select('email fullname score role');
     if (!user) {
       winston.error('User not found.');
       return {
@@ -196,14 +202,18 @@ const loginGoogle = async (token) => {
       };
     }
     let accessToken;
-    const foundExistingUser = await User.findOne({ email });
+    // Create random password, don't use
+    let randomStr = (Math.random() + 1).toString(36).substring(6);
+    const foundExistingUser = await User.findOne({
+      email,
+      typeLogin: TYPE_LOGIN_GOOGLE
+    });
     if (!foundExistingUser) {
       const newUser = new User({
         email,
-        password: null,
+        password: randomStr,
         fullname: name,
-        age: null,
-        school: null,
+        typeLogin: TYPE_LOGIN_GOOGLE,
         emailToken: null,
         isVerified: true
       });
