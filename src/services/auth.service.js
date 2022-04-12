@@ -10,10 +10,12 @@ import { transMail } from '../lang/vi';
 import { OAuth2Client } from 'google-auth-library';
 import { TYPE_LOGIN_LOCAL, TYPE_LOGIN_GOOGLE } from '../constants/auth';
 
+const LOG_MODULE = '[AUTH-SERVICE]';
+
 const register = async (user) => {
   const { email, password, fullname } = user;
   if (!email || !password || !fullname ) {
-    winston.error('Missing at least one field when registering.');
+    winston.error(`${LOG_MODULE} Missing at least one field when registering.`);
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
       message: 'Missing at least one field when registering.'
@@ -25,7 +27,7 @@ const register = async (user) => {
       typeLogin: TYPE_LOGIN_LOCAL
     });
     if (user) {
-      winston.error('Username already taken.');
+      winston.error(`${LOG_MODULE} Username already taken.`);
       return {
         statusCode: STATUS_CODE.BAD_REQUEST,
         message: 'Username already taken.'
@@ -41,15 +43,15 @@ const register = async (user) => {
       isVerified: false
     });
     const userRec = await newUser.save();
-    winston.debug(`Create a new user successfully with email: ${userRec.email}`);
+    winston.debug(`${LOG_MODULE} Create a new user successfully with email: ${userRec.email}`);
 
     const username = email.split('@')[0];
     await sendMail(userRec.email, transMail.subject(userRec.email), transMail.template(username, userRec.emailToken))
       .then((success) => {
-        winston.debug(`Send verify email to: ${email}`);
+        winston.debug(`${LOG_MODULE} Send verify email to: ${email}`);
       }).catch( async (err) => {
         await User.deleteOne(userRec);
-        winston.error(err);
+        winston.error(`${LOG_MODULE} ${err}`);
         return {
           statusCode: STATUS_CODE.BAD_REQUEST,
           message: 'User created failed'
@@ -61,7 +63,7 @@ const register = async (user) => {
       message: 'User created successfully'
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -72,7 +74,7 @@ const register = async (user) => {
 const login = async (user) => {
   const { email, password } = user;
   if (!email || !password ) {
-    winston.error('Missing at least one field when login.');
+    winston.error(`${LOG_MODULE} Missing at least one field when login.`);
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
       message: 'Missing at least one field when login.'
@@ -84,7 +86,7 @@ const login = async (user) => {
       typeLogin: TYPE_LOGIN_LOCAL
     });
     if (!user) {
-      winston.error('Incorrect email or password');
+      winston.error(`${LOG_MODULE} Incorrect email`);
       return {
         statusCode: STATUS_CODE.BAD_REQUEST,
         message: 'Incorrect email or password'
@@ -92,14 +94,14 @@ const login = async (user) => {
     }
     const passwordValid = await argon2.verify(user.password, password);
     if (!passwordValid) {
-      winston.error('Incorrect email or password');
+      winston.error(`${LOG_MODULE} Incorrect password`);
       return {
         statusCode: STATUS_CODE.BAD_REQUEST,
         message: 'Incorrect email or password'
       };
     }
     if (!user.isVerified) {
-      winston.error('User need verify email!');
+      winston.error(`${LOG_MODULE} User need verify email!`);
       return {
         statusCode: STATUS_CODE.SUCCESS,
         message: 'User need verify email!',
@@ -108,7 +110,7 @@ const login = async (user) => {
         }
       };
     }
-    winston.debug(`Login successfully with username: ${user.email}`);
+    winston.debug(`${LOG_MODULE} Login successfully with username: ${user.email}`);
     const accessToken = generateJwtToken(user);
     return {
       statusCode: STATUS_CODE.SUCCESS,
@@ -118,7 +120,7 @@ const login = async (user) => {
       }
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -131,20 +133,20 @@ const getCurrentUser = async (userId) => {
     const user = await User.findById(userId)
       .select('email fullname score role');
     if (!user) {
-      winston.error('User not found.');
+      winston.error(`${LOG_MODULE} User not found.`);
       return {
         statusCode: STATUS_CODE.NOT_FOUND,
         message: 'User not found.'
       };
     }
-    winston.debug(`Get current user successfully with id: #${userId}`);
+    winston.debug(`${LOG_MODULE} Get current user successfully with id: #${userId}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get current user successfully.',
       data: user
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -165,7 +167,7 @@ const verifyEmail = async (req, res) => {
       res.render('404');
     }
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -176,7 +178,7 @@ const verifyEmail = async (req, res) => {
 const loginGoogle = async (token) => {
   const { googleToken } = token;
   if (!googleToken ) {
-    winston.error('Missing googleToken.');
+    winston.error(`${LOG_MODULE} Missing googleToken.`);
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
       message: 'Missing googleToken.'
@@ -218,9 +220,10 @@ const loginGoogle = async (token) => {
         isVerified: true
       });
       const userRec = await newUser.save();
-      winston.debug(`[SIGN IN WITH GOOGLE] Create a new user successfully with email: ${userRec.email}`);
+      winston.debug(`${LOG_MODULE} Create a new user successfully with email: ${userRec.email}`);
       accessToken = generateJwtToken(userRec);
     } else {
+      winston.debug(`${LOG_MODULE} Signin google with email: ${email}`);
       accessToken = generateJwtToken(foundExistingUser);
     }
     return {
@@ -231,7 +234,7 @@ const loginGoogle = async (token) => {
       }
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'

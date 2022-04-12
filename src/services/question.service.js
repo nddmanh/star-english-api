@@ -2,9 +2,11 @@ import Question from './../models/Question';
 import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
 
+const LOG_MODULE = '[QUESTION-SERVICE]';
+
 const getQuestions = async (infoPage) => {
   if (!infoPage.level) {
-    winston.error('You need level for question in query.');
+    winston.error(`${LOG_MODULE} User need level for question in query.`);
     return {
       statusCode: STATUS_CODE.BAD_REQUEST,
       message: 'You need level for question in query.'
@@ -19,8 +21,8 @@ const getQuestions = async (infoPage) => {
     let question_size;
     let questions = [];
     let arr_randoms = [];
-    let num_question = await Question.count({ 'level': levelQuestion });
-    winston.debug(`Count the num question with level #${levelQuestion}: ${num_question}`);
+    let num_question = await Question.countDocuments({ 'level': levelQuestion });
+    winston.debug(`${LOG_MODULE} Count the num question with level #${levelQuestion}: ${num_question}`);
     if (num_question > pageOptions.limit) {
       question_size = pageOptions.limit;
     } else {
@@ -39,7 +41,7 @@ const getQuestions = async (infoPage) => {
     for (let i = 0; i < questions.length; i++) {
       questions[i]['number'] = i + 1;
     }
-    winston.debug(`Get #${question_size} questions level ${levelQuestion} in page: #${pageOptions.page}`);
+    winston.debug(`${LOG_MODULE} Get #${question_size} questions level ${levelQuestion} in page: #${pageOptions.page}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get all question successfully',
@@ -51,7 +53,7 @@ const getQuestions = async (infoPage) => {
       }
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -80,14 +82,14 @@ const createOneQuestion = async (question) => {
       correct_answer
     });
     await newQuestion.save();
-    winston.debug(`Create a new question with id: #${newQuestion._id}`);
+    winston.debug(`${LOG_MODULE} Create a new question with id: #${newQuestion._id}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Create a question successfully!',
       data: newQuestion
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'

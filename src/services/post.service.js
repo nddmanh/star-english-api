@@ -2,6 +2,8 @@ import Post from './../models/Post';
 import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
 
+const LOG_MODULE = '[POST-SERVICE]';
+
 const getAllPosts = async (infoPage) => {
   try {
     const pageOptions = {
@@ -14,7 +16,7 @@ const getAllPosts = async (infoPage) => {
       .limit(pageOptions.limit)
       .select('id title description content createdAt');
 
-    winston.debug(`Get #${pageOptions.limit} posts in page: #${pageOptions.page}`);
+    winston.debug(`${LOG_MODULE} Get #${pageOptions.limit} posts in page: #${pageOptions.page}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get all post successfully',
@@ -25,7 +27,7 @@ const getAllPosts = async (infoPage) => {
       }
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -42,14 +44,14 @@ const createOnePost = async (post) => {
       content
     });
     await newPost.save();
-    winston.debug(`Create a new post with title: ${title}`);
+    winston.debug(`${LOG_MODULE} Create a new post with title: ${title}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Create a post successfully!',
       data: newPost
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'
@@ -60,14 +62,14 @@ const createOnePost = async (post) => {
 const findOnePost = async (id) => {
   try {
     const post = await Post.findById(id).select('id title description content createdAt');
-    winston.debug(`Get posts with id: #${id}`);
+    winston.debug(`${LOG_MODULE} Get posts with id: #${id}`);
     return {
       statusCode: STATUS_CODE.SUCCESS,
       message: 'Get one post successfully',
       data: post
     };
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     return {
       statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
       message: 'Internal server error'

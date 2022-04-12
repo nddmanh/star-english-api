@@ -2,12 +2,14 @@ import PostService from './../services/post.service';
 import STATUS_CODE from './../constants/status_code';
 import winston from './../helper/logger';
 
+const LOG_MODULE = '[POST-CONTROLLER]';
+
 const getAllPosts = async (req, res) => {
   try {
     const result = await PostService.getAllPosts(req.query);
     return res.status(result.statusCode).json(result);
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
       .json({
         statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
@@ -21,7 +23,7 @@ const createOnePost = async (req, res) => {
     const result = await PostService.createOnePost(req.body);
     return res.status(result.statusCode).json(result);
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
       .json({
         statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
@@ -35,7 +37,7 @@ const findOnePost = async (req, res) => {
     const result = await PostService.findOnePost(req.params.id);
     return res.status(result.statusCode).json(result);
   } catch (error) {
-    winston.error(error);
+    winston.error(`${LOG_MODULE} ${error}`);
     res.status(STATUS_CODE.SERVER_ERROR_INTERNAL)
       .json({
         statusCode: STATUS_CODE.SERVER_ERROR_INTERNAL,
