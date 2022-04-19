@@ -20,7 +20,7 @@ const updateScore = async (req, res) => {
 
 const leaderboard = async (req, res) => {
   try {
-    const result = await UserService.leaderboard(req.userId, req.query);
+    const result = await UserService.leaderboard(req.query);
     return res.status(result.statusCode).json(result);
   } catch (error) {
     winston.error(`${LOG_MODULE} ${error}`);

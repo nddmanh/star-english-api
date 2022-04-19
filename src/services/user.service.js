@@ -43,7 +43,7 @@ const updateScore = async (userId, user) => {
   }
 };
 
-const leaderboard = async (userId, infoPage) => {
+const leaderboard = async (infoPage) => {
   try {
     const pageOptions = {
       page: parseInt(infoPage.page, 10) || 1,

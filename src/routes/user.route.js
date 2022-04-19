@@ -6,6 +6,6 @@ const router = express.Router();
 
 router.patch('/update-score', verifyToken, updateScore);
 
-router.get('/leaderboard', verifyToken, leaderboard);
+router.get('/leaderboard', leaderboard);
 
 module.exports = router;
